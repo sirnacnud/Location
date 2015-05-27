@@ -43,8 +43,6 @@
         //Get the share model and also initialize myLocationArray
         self.shareModel = [LocationShareModel sharedModel];
         self.shareModel.myLocationArray = [[NSMutableArray alloc]init];
-        
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
 	}
 	return self;
 }
@@ -111,6 +109,11 @@
             [locationManager startUpdatingLocation];
         }
 	}
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationEnterBackground)
+                                                 name:UIApplicationDidEnterBackgroundNotification
+                                                object:nil];
 }
 
 
@@ -124,6 +127,10 @@
     
 	CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
 	[locationManager stopUpdatingLocation];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                    name:UIApplicationDidEnterBackgroundNotification
+                                                  object:nil];
 }
 
 #pragma mark - CLLocationManagerDelegate Methods
