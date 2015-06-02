@@ -31,7 +31,8 @@
 }
 
 - (id)init {
-	if (self==[super init]) {
+    self = [super init];
+	if (self) {
         [DDLog addLogger:[DDASLLogger sharedInstance]];
         [DDLog addLogger:[DDTTYLogger sharedInstance]];
         
