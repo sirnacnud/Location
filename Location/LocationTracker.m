@@ -48,23 +48,28 @@
 	return self;
 }
 
--(void)applicationEnterBackground{
-    CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
-    locationManager.delegate = self;
-    locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation;
-    locationManager.distanceFilter = kCLDistanceFilterNone;
-    
-    if(IS_OS_8_OR_LATER) {
-        [locationManager requestAlwaysAuthorization];
-    }
-    [locationManager startUpdatingLocation];
+- (void)applicationEnterBackground {
+    [self restartLocationUpdates];
     
     //Use the BackgroundTaskManager to manage all the background Task
     self.shareModel.bgTask = [BackgroundTaskManager sharedBackgroundTaskManager];
     [self.shareModel.bgTask beginNewBackgroundTask];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationEnterForeground)
+                                                 name:UIApplicationWillEnterForegroundNotification
+                                               object:nil];
 }
 
-- (void) restartLocationUpdates
+- (void)applicationEnterForeground {
+    [[BackgroundTaskManager sharedBackgroundTaskManager] endAllBackgroundTasks];
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self
+                                                 name:UIApplicationWillEnterForegroundNotification
+                                               object:nil];
+}
+
+- (void)restartLocationUpdates
 {
     DDLogVerbose(@"restartLocationUpdates");
     
@@ -176,8 +181,10 @@
         return;
     }
     
-    self.shareModel.bgTask = [BackgroundTaskManager sharedBackgroundTaskManager];
-    [self.shareModel.bgTask beginNewBackgroundTask];
+    if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
+        self.shareModel.bgTask = [BackgroundTaskManager sharedBackgroundTaskManager];
+        [self.shareModel.bgTask beginNewBackgroundTask];
+    }
     
     //Restart the locationMaanger after 1 minute
     self.shareModel.timer = [NSTimer scheduledTimerWithTimeInterval:60 target:self
