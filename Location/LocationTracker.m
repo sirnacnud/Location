@@ -49,6 +49,11 @@
 }
 
 - (void)applicationEnterBackground {
+    if (self.shareModel.delay10Seconds) {
+        [self.shareModel.delay10Seconds invalidate];
+        self.shareModel.delay10Seconds = nil;
+    }
+    
     [self restartLocationUpdates];
     
     //Use the BackgroundTaskManager to manage all the background Task
