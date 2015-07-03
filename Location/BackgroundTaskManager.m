@@ -9,6 +9,8 @@
 
 #import <CocoaLumberjack/CocoaLumberjack.h>
 
+NSString* const BackgroundTaskManagerMasterTaskKilledNotification = @"BackgroundTaskManagerMasterTaskKilledNotification";
+
 @interface BackgroundTaskManager()
 @property (nonatomic, strong)NSMutableArray* bgTaskIdList;
 @property (assign) UIBackgroundTaskIdentifier masterTaskId;
@@ -44,6 +46,15 @@
     if([application respondsToSelector:@selector(beginBackgroundTaskWithExpirationHandler:)]){
         bgTaskId = [application beginBackgroundTaskWithExpirationHandler:^{
             DDLogVerbose(@"background task %lu expired", (unsigned long)bgTaskId);
+            
+            if (self.masterTaskId == bgTaskId)
+            {
+                NSNotification* note = [[NSNotification alloc] initWithName:BackgroundTaskManagerMasterTaskKilledNotification
+                                                                     object:nil
+                                                                   userInfo:nil];
+            
+                [[NSNotificationCenter defaultCenter] postNotification:note];
+            }
             
             [self.bgTaskIdList removeObject:@(bgTaskId)];
             [application endBackgroundTask:bgTaskId];

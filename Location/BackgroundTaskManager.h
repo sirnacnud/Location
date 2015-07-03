@@ -8,6 +8,8 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+extern NSString* const BackgroundTaskManagerMasterTaskKilledNotification;
+
 @interface BackgroundTaskManager : NSObject
 
 +(instancetype)sharedBackgroundTaskManager;
