@@ -7,7 +7,7 @@
 
 #import "BackgroundTaskManager.h"
 
-#import <CocoaLumberjack/CocoaLumberjack.h>
+#import "LocationTrackingLogger.h"
 
 NSString* const BackgroundTaskManagerMasterTaskKilledNotification = @"BackgroundTaskManagerMasterTaskKilledNotification";
 
@@ -45,7 +45,7 @@ NSString* const BackgroundTaskManagerMasterTaskKilledNotification = @"Background
     __block UIBackgroundTaskIdentifier bgTaskId = UIBackgroundTaskInvalid;
     if([application respondsToSelector:@selector(beginBackgroundTaskWithExpirationHandler:)]){
         bgTaskId = [application beginBackgroundTaskWithExpirationHandler:^{
-            DDLogVerbose(@"background task %lu expired", (unsigned long)bgTaskId);
+            LTLogVerbose(@"background task %lu expired", (unsigned long)bgTaskId);
             
             if (self.masterTaskId == bgTaskId)
             {
@@ -64,12 +64,12 @@ NSString* const BackgroundTaskManagerMasterTaskKilledNotification = @"Background
         if ( self.masterTaskId == UIBackgroundTaskInvalid )
         {
             self.masterTaskId = bgTaskId;
-            DDLogVerbose(@"started master task %lu", (unsigned long)self.masterTaskId);
+            LTLogVerbose(@"started master task %lu", (unsigned long)self.masterTaskId);
         }
         else
         {
             //add this id to our list
-            DDLogVerbose(@"started background task %lu", (unsigned long)bgTaskId);
+            LTLogVerbose(@"started background task %lu", (unsigned long)bgTaskId);
             [self.bgTaskIdList addObject:@(bgTaskId)];
             [self endBackgroundTasks];
         }
@@ -97,23 +97,23 @@ NSString* const BackgroundTaskManagerMasterTaskKilledNotification = @"Background
         for ( NSUInteger i=(all?0:1); i<count; i++ )
         {
             UIBackgroundTaskIdentifier bgTaskId = [[self.bgTaskIdList objectAtIndex:0] integerValue];
-            DDLogVerbose(@"ending background task with id -%lu", (unsigned long)bgTaskId);
+            LTLogVerbose(@"ending background task with id -%lu", (unsigned long)bgTaskId);
             [application endBackgroundTask:bgTaskId];
             [self.bgTaskIdList removeObjectAtIndex:0];
         }
         if ( self.bgTaskIdList.count > 0 )
         {
-            DDLogVerbose(@"kept background task id %@", [self.bgTaskIdList objectAtIndex:0]);
+            LTLogVerbose(@"kept background task id %@", [self.bgTaskIdList objectAtIndex:0]);
         }
         if ( all )
         {
-            DDLogVerbose(@"no more background tasks running");
+            LTLogVerbose(@"no more background tasks running");
             [application endBackgroundTask:self.masterTaskId];
             self.masterTaskId = UIBackgroundTaskInvalid;
         }
         else
         {
-            DDLogVerbose(@"kept master background task id %lu", (unsigned long)self.masterTaskId);
+            LTLogVerbose(@"kept master background task id %lu", (unsigned long)self.masterTaskId);
         }
     }
 }

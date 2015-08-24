@@ -8,7 +8,7 @@
 
 #import "LocationTracker.h"
 
-#import <CocoaLumberjack/CocoaLumberjack.h>
+#import "LocationTrackingLogger.h"
 
 #define LATITUDE @"latitude"
 #define LONGITUDE @"longitude"
@@ -68,7 +68,7 @@
 
 - (void)restartLocationUpdates
 {
-    DDLogVerbose(@"restartLocationUpdates");
+    LTLogVerbose(@"restartLocationUpdates");
     
     if (self.shareModel.timer) {
         [self.shareModel.timer invalidate];
@@ -88,19 +88,19 @@
 
 
 - (void)startLocationTracking {
-    DDLogVerbose(@"startLocationTracking");
+    LTLogVerbose(@"startLocationTracking");
 
 	if ([CLLocationManager locationServicesEnabled] == NO) {
-        DDLogVerbose(@"locationServicesEnabled false");
+        LTLogVerbose(@"locationServicesEnabled false");
 		UIAlertView *servicesDisabledAlert = [[UIAlertView alloc] initWithTitle:@"Location Services Disabled" message:@"You currently have all location services for this device disabled" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil];
 		[servicesDisabledAlert show];
 	} else {
         CLAuthorizationStatus authorizationStatus= [CLLocationManager authorizationStatus];
         
         if(authorizationStatus == kCLAuthorizationStatusDenied || authorizationStatus == kCLAuthorizationStatusRestricted){
-            DDLogVerbose(@"authorizationStatus failed");
+            LTLogVerbose(@"authorizationStatus failed");
         } else {
-            DDLogVerbose(@"authorizationStatus authorized");
+            LTLogVerbose(@"authorizationStatus authorized");
             CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
             locationManager.delegate = self;
             locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation;
@@ -121,7 +121,7 @@
 
 
 - (void)stopLocationTracking {
-    DDLogVerbose(@"stopLocationTracking");
+    LTLogVerbose(@"stopLocationTracking");
     
     if (self.shareModel.timer) {
         [self.shareModel.timer invalidate];
@@ -140,7 +140,7 @@
 
 -(void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations{
     
-    DDLogVerbose(@"locationManager didUpdateLocations");
+    LTLogVerbose(@"locationManager didUpdateLocations");
     
     for(int i=0;i<locations.count;i++){
         CLLocation * newLocation = [locations objectAtIndex:i];
@@ -178,6 +178,8 @@
         return;
     }
     
+    LTLogVerbose(@"%f seconds left", [UIApplication sharedApplication].backgroundTimeRemaining);
+    
     if ([UIApplication sharedApplication].applicationState == UIApplicationStateBackground) {
         self.shareModel.bgTask = [BackgroundTaskManager sharedBackgroundTaskManager];
         [self.shareModel.bgTask beginNewBackgroundTask];
@@ -209,7 +211,7 @@
     CLLocationManager *locationManager = [LocationTracker sharedLocationManager];
     [locationManager stopUpdatingLocation];
     
-    DDLogVerbose(@"locationManager stop Updating after 10 seconds");
+    LTLogVerbose(@"locationManager stop Updating after 10 seconds");
 }
 
 
@@ -242,7 +244,7 @@
 //Send the location to Server
 - (void)updateLocationToServer {
     
-    DDLogVerbose(@"updateLocationToServer");
+    LTLogVerbose(@"updateLocationToServer");
     
     // Find the best location from the array based on accuracy
     NSMutableDictionary * myBestLocation = [[NSMutableDictionary alloc]init];
@@ -258,13 +260,13 @@
             }
         }
     }
-    DDLogVerbose(@"My Best location:%@",myBestLocation);
+    LTLogVerbose(@"My Best location:%@",myBestLocation);
     
     //If the array is 0, get the last location
     //Sometimes due to network issue or unknown reason, you could not get the location during that  period, the best you can do is sending the last known location to the server
     if(self.shareModel.myLocationArray.count==0)
     {
-        DDLogVerbose(@"Unable to get location, use the last known location");
+        LTLogVerbose(@"Unable to get location, use the last known location");
 
         self.myLocation=self.myLastLocation;
         self.myLocationAccuracy=self.myLastLocationAccuracy;
@@ -277,7 +279,7 @@
         self.myLocationAccuracy =[[myBestLocation objectForKey:ACCURACY]floatValue];
     }
     
-    DDLogVerbose(@"Send to Server: Latitude(%f) Longitude(%f) Accuracy(%f)",self.myLocation.latitude, self.myLocation.longitude,self.myLocationAccuracy);
+    LTLogVerbose(@"Send to Server: Latitude(%f) Longitude(%f) Accuracy(%f)",self.myLocation.latitude, self.myLocation.longitude,self.myLocationAccuracy);
     
     //TODO: Your code to send the self.myLocation and self.myLocationAccuracy to your server
     
